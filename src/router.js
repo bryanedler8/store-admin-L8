@@ -1,18 +1,16 @@
 import { createWebHistory, createRouter } from "vue-router";
+import ProductList from "./components/ProductList";
+import ProductForm from "./components/ProductForm";
 import OrderList from "./components/OrderList";
 import OrderDetail from "./components/OrderDetail";
-import ProductList from "./components/ProductList";
-import ProductDetail from "./components/ProductDetail";
-import ProductForm from "./components/ProductForm";
 
 const routes = [
-  { path: "/", component: OrderList },
+  { path: "/", redirect: "/products" },
+  { path: "/products", component: ProductList },
+  { path: "/product/:id", component: ProductForm },
   { path: "/orders", component: OrderList },
   { path: "/order/:id", component: OrderDetail },
-  { path: "/products", component: ProductList },
-  { path: "/product/:id", component: ProductDetail },
-  { path: "/product/:id/edit", component: ProductForm },
-  { path: "/product/add", component: ProductForm },
+  { path: "/inventory", component: ProductList },
 ];
 
 const router = createRouter({

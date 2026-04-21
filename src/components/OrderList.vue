@@ -1,62 +1,131 @@
 <template>
-  <div class="order-list" v-if="hasOrders">
-    <table>
+  <div class="order-management">
+    <h1>Order Management</h1>
+    
+    <div class="filters">
+      <select v-model="statusFilter" @change="filterOrders">
+        <option value="">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="processing">Processing</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+
+    <table class="order-table">
       <thead>
         <tr>
           <th>Order ID</th>
-          <th>Customer ID</th>
-          <th>Status</th>
+          <th>Customer</th>
+          <th>Items</th>
           <th>Total</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Actions</th>
         </tr>
       </thead>
-      <tr v-for="order in orders" :key="order.orderId">
-        <td><router-link :to="`/order/${order.orderId}`">{{ order.orderId }}</router-link></td>
-        <td>{{ order.customerId }}</td>
-        <td>{{ order.status }}</td>
-        <td>{{ orderTotal(order) }}</td>
-      </tr>
+      <tbody>
+        <tr v-for="order in filteredOrders" :key="order.orderId">
+          <td>{{ order.orderId }}</td>
+          <td>{{ order.customer?.name || order.customerName }}</td>
+          <td>{{ order.items?.length || 0 }} items</td>
+          <td>${{ (order.total || 0).toFixed(2) }}</td>
+          <td>
+            <span :class="'status-' + order.status">
+              {{ order.status }}
+            </span>
+          </td>
+          <td>{{ new Date(order.createdAt).toLocaleDateString() }}</td>
+          <td>
+            <button @click="viewOrder(order)" class="view-btn">View</button>
+          </td>
+        </tr>
+      </tbody>
     </table>
   </div>
-  <div class="order-list" v-else>
-    <h3>No orders to process</h3>
-  </div> 
 </template>
 
 <script>
-  export default {
-    name: 'OrderList',
-    props: ['orders'],
-    emits: ['fetchOrders', 'completeOrder'],
-    computed: {
-      hasOrders() {
-        return this.orders.length > 0
-      }
+export default {
+  name: 'OrderList',
+  data() {
+    return {
+      orders: [],
+      statusFilter: ''
+    }
+  },
+  computed: {
+    filteredOrders() {
+      if (!this.statusFilter) return this.orders
+      return this.orders.filter(o => o.status === this.statusFilter)
+    }
+  },
+  mounted() {
+    this.fetchOrders()
+  },
+  methods: {
+    fetchOrders() {
+      fetch('/orders')
+        .then(response => response.json())
+        .then(data => {
+          this.orders = data.orders || []
+        })
+        .catch(error => console.error('Error fetching orders:', error))
     },
-    methods: {
-      fetchOrders() {
-        this.$emit('fetchOrders')
-      },
-      orderTotal(order) {
-        let total = 0;
-        order.items.forEach(item => {
-          total += item.price * item.quantity;
-        });
-        return total.toFixed(2);
-      }
+    viewOrder(order) {
+      this.$router.push(`/order/${order.orderId}`)
     },
-    beforeMount() {
-      this.fetchOrders()
+    filterOrders() {
+      // Computed property handles filtering
     }
   }
+}
 </script>
 
 <style scoped>
-a {
-  color: #0000FF;
-  text-decoration: underline;
+.order-management {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.order-list {
+.filters {
+  margin-bottom: 20px;
+}
+
+.filters select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.order-table th, .order-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
   text-align: left;
+}
+
+.order-table th {
+  background-color: #0046be;
+  color: white;
+}
+
+.status-pending { color: orange; font-weight: bold; }
+.status-processing { color: blue; font-weight: bold; }
+.status-completed { color: green; font-weight: bold; }
+.status-cancelled { color: red; font-weight: bold; }
+
+.view-btn {
+  background-color: #0046be;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
 }
 </style>
