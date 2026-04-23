@@ -19,7 +19,7 @@ module.exports = defineConfig({
         throw new Error('webpack-dev-server is not defined');
       }
 
-      devServer.app.use(bodyParser.json())
+      devServer.app.use(bodyParser.json()) 
       
       // Health check
       devServer.app.get('/health', (_, res) => {
